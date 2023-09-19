@@ -2,6 +2,7 @@
 
 namespace CodeZero\LocalizedRoutes\Illuminate\Routing;
 
+use App\Models\Setting;
 use CodeZero\LocalizedRoutes\Facades\LocaleConfig;
 use Illuminate\Routing\UrlGenerator as BaseUrlGenerator;
 use Illuminate\Support\Facades\App;
@@ -22,8 +23,8 @@ class UrlGenerator extends BaseUrlGenerator
     public function route($name, $parameters = [], $absolute = true, $locale = null)
     {
         // @author Prisify
-        $social = $this->checkIfSocialRoute();
-        if( $social ) {
+        $tracked = $this->checkIfRouteIsTrackable();
+        if( $tracked ) {
             $parameters[ 'source' ] = request()->segment( 1 );
             $parameters[ 'campaign' ] = request()->segment( 2 );
         }
@@ -32,7 +33,7 @@ class UrlGenerator extends BaseUrlGenerator
         // resolve any translatable route parameters such as slugs.
         $currentLocale = App::getLocale();
 
-        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale, $social);
+        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale, $tracked);
 
         // Update the current locale if needed.
         if ($locale !== null && $locale !== $currentLocale) {
@@ -62,11 +63,11 @@ class UrlGenerator extends BaseUrlGenerator
      *
      * @return string
      */
-    public function signedRoute($name, $parameters = [], $expiration = null, $absolute = true, $locale = null)
+    public function signedRoute( $name, $parameters = [], $expiration = null, $absolute = true, string $locale = null)
     {
         // @author Prisify
-        $social = $this->checkIfSocialRoute();
-        if( $social ) {
+        $tracked = $this->checkIfRouteIsTrackable();
+        if( $tracked ) {
             $parameters[ 'source' ] = request()->segment( 1 );
             $parameters[ 'campaign' ] = request()->segment( 2 );
         }
@@ -75,7 +76,7 @@ class UrlGenerator extends BaseUrlGenerator
         // resolve any translatable route parameters such as slugs.
         $currentLocale = App::getLocale();
 
-        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale, $social);
+        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale, $tracked);
 
         // Update the current locale if needed.
         if ($locale !== null && $locale !== $currentLocale) {
@@ -119,11 +120,10 @@ class UrlGenerator extends BaseUrlGenerator
      *
      * @return string
      */
-    protected function resolveLocalizedRouteName($name, $locale, $currentLocale, $social = false)
+    protected function resolveLocalizedRouteName($name, $locale, $currentLocale, $tracked = false)
     {
         // If the route exists, and we're not requesting a specific locale,
         // let the base class resolve the route.
-        // @author Prisify
         if (Route::has($name) && $locale === null) {
             return $name;
         }
@@ -148,9 +148,10 @@ class UrlGenerator extends BaseUrlGenerator
             $newName = "{$fallbackLocale}.{$baseName}";
         }
 
-        // Add social. to route naming
-        if ( $social ) {
-            $newName = "social.$newName";
+        // Add "tracked." to route naming
+        // @author Prisify
+        if ( $tracked ) {
+            $newName = "tracked.$newName";
         }
 
         // If the unprefixed route name exists, but the new localized route name doesn't,
@@ -194,15 +195,14 @@ class UrlGenerator extends BaseUrlGenerator
     }
 
     /**
-     * Check if first URL segment is from Social campaign url structure
+     * Check if first URL segment is from Trackable url structure
      *
      * @return boolean
      * @author Prisify
      */
-    protected function checkIfSocialRoute(): bool
+    protected function checkIfRouteIsTrackable(): bool
     {
-        //todo load from translation_lines
-        return in_array( request()->segment(1), [ 'fb', 'ig' ] );
+        return in_array( request()->segment(1), config('localized-routes.traced_sources') );
     }
 
 

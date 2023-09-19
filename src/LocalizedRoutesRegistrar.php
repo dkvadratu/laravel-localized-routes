@@ -76,19 +76,19 @@ class LocalizedRoutesRegistrar
             // Register the route group.
             Route::group($attributes, $closure);
 
-            // Register route for Social campaigns
+            // Register route for Tracked campaigns
             // @author Prisify
-            $attributesSocial = [
-                'as' => 'social.' . $attributes['as'],
+            $attributesTracked = [
+                'as' => 'tracked.' . $attributes['as'],
                 'locale' => $locale,
                 'prefix' => '{source}/{campaign}'
             ];
 
             if ( $locale !== $omittedLocale ) {
-                $attributesSocial[ 'prefix' ] = '{source}/{campaign}/' . $locale;
+                $attributesTracked[ 'prefix' ] = '{source}/{campaign}/' . $locale;
             }
 
-            Route::group( $attributesSocial, $closure );
+            Route::group( $attributesTracked, $closure );
         }
 
         // Restore the original locale.
