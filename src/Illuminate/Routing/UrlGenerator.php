@@ -21,11 +21,18 @@ class UrlGenerator extends BaseUrlGenerator
      */
     public function route($name, $parameters = [], $absolute = true, $locale = null)
     {
+        // @author Prisify
+        $social = $this->checkIfSocialRoute();
+        if( $social ) {
+            $parameters[ 'source' ] = request()->segment( 1 );
+            $parameters[ 'campaign' ] = request()->segment( 2 );
+        }
+
         // Cache the current locale, so we can change it to automatically
         // resolve any translatable route parameters such as slugs.
         $currentLocale = App::getLocale();
 
-        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale);
+        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale, $social);
 
         // Update the current locale if needed.
         if ($locale !== null && $locale !== $currentLocale) {
@@ -57,11 +64,18 @@ class UrlGenerator extends BaseUrlGenerator
      */
     public function signedRoute($name, $parameters = [], $expiration = null, $absolute = true, $locale = null)
     {
+        // @author Prisify
+        $social = $this->checkIfSocialRoute();
+        if( $social ) {
+            $parameters[ 'source' ] = request()->segment( 1 );
+            $parameters[ 'campaign' ] = request()->segment( 2 );
+        }
+
         // Cache the current locale, so we can change it to automatically
         // resolve any translatable route parameters such as slugs.
         $currentLocale = App::getLocale();
 
-        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale);
+        $resolvedName = $this->resolveLocalizedRouteName($name, $locale, $currentLocale, $social);
 
         // Update the current locale if needed.
         if ($locale !== null && $locale !== $currentLocale) {
@@ -105,10 +119,11 @@ class UrlGenerator extends BaseUrlGenerator
      *
      * @return string
      */
-    protected function resolveLocalizedRouteName($name, $locale, $currentLocale)
+    protected function resolveLocalizedRouteName($name, $locale, $currentLocale, $social = false)
     {
         // If the route exists, and we're not requesting a specific locale,
         // let the base class resolve the route.
+        // @author Prisify
         if (Route::has($name) && $locale === null) {
             return $name;
         }
@@ -131,6 +146,11 @@ class UrlGenerator extends BaseUrlGenerator
         // use a fallback locale if one is configured.
         if ( ! Route::has($newName) && $fallbackLocale) {
             $newName = "{$fallbackLocale}.{$baseName}";
+        }
+
+        // Add social. to route naming
+        if ( $social ) {
+            $newName = "social.$newName";
         }
 
         // If the unprefixed route name exists, but the new localized route name doesn't,
@@ -172,4 +192,18 @@ class UrlGenerator extends BaseUrlGenerator
 
         return $name;
     }
+
+    /**
+     * Check if first URL segment is from Social campaign url structure
+     *
+     * @return boolean
+     * @author Prisify
+     */
+    protected function checkIfSocialRoute(): bool
+    {
+        //todo load from translation_lines
+        return in_array( request()->segment(1), [ 'fb', 'ig' ] );
+    }
+
+
 }
