@@ -182,6 +182,13 @@ class UrlGenerator extends BaseUrlGenerator
             return $name;
         }
 
+        // If the first part of the route name is tracked
+        // then remove it from the array.
+        // @author Prisify
+        if ($parts[0] === 'tracked') {
+            array_shift($parts);
+        }
+
         // If the first part of the route name is a valid
         // locale, then remove it from the array.
         if (LocaleConfig::isSupportedLocale($parts[0])) {

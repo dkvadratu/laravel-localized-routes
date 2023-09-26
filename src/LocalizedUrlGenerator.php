@@ -54,8 +54,16 @@ class LocalizedUrlGenerator
         $requestQueryString = $urlBuilder->getQuery();
 
         $currentDomain = $urlBuilder->getHost();
-        $currentLocaleSlug = $urlBuilder->getSlugs()[0] ?? null;
 
+        // First route segment could be {source} in URL /fb/campaing/.
+        // Need to decide which segment is {locale}
+        // @author Prisify
+        $localeSegmentIndex = 0;
+        if($this->checkIfRouteIsTrackable( $urlBuilder->getSlugs() )) {
+            $localeSegmentIndex = 2;
+        }
+
+        $currentLocaleSlug = $urlBuilder->getSlugs()[$localeSegmentIndex] ?? null;
         // Determine in which locale the URL needs to be localized.
         $locale = $locale
             ?? LocaleConfig::findLocaleBySlug($currentLocaleSlug)
@@ -375,5 +383,16 @@ class LocalizedUrlGenerator
     protected function getBindingFieldFor($key): ?string
     {
         return $this->route->bindingFieldFor($key);
+    }
+
+    /**
+     * Check if first URL segment is from Trackable url structure
+     *
+     * @return boolean
+     * @author Prisify
+     */
+    protected function checkIfRouteIsTrackable( $slugs ): bool
+    {
+        return in_array( $slugs[0], config('localized-routes.traced_sources') );
     }
 }
