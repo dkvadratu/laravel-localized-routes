@@ -393,6 +393,6 @@ class LocalizedUrlGenerator
      */
     protected function checkIfRouteIsTrackable( $slugs ): bool
     {
-        return in_array( $slugs[0], config('localized-routes.traced_sources') );
+        return in_array($slugs[0], config('localized-routes.traced_sources', [])) && isset($slugs[1]);
     }
 }
