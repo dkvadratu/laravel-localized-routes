@@ -209,7 +209,7 @@ class UrlGenerator extends BaseUrlGenerator
      */
     protected function checkIfRouteIsTrackable(): bool
     {
-        return in_array( request()->segment(1), config('localized-routes.traced_sources') );
+        return in_array(request()->segment(1), config('localized-routes.traced_sources')) && request()->segment(2) !== null;
     }
 
 
